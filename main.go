@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 
 	dotenv "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -15,7 +14,6 @@ import (
 
 type apiConfig struct {
 	DB *database.Queries
-	mu *sync.Mutex
 }
 
 func main() {
