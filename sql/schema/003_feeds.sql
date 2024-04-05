@@ -1,5 +1,5 @@
 -- +goose Up
-CREATE TABLE IF NOT EXISTS feeds(
+CREATE TABLE IF NOT EXISTS feeds (
 				id UUID PRIMARY KEY,
 				created_at TIMESTAMP NOT NULL,
 				updated_at TIMESTAMP NOT NULL,
@@ -12,6 +12,6 @@ CREATE TABLE IF NOT EXISTS feeds(
 				ON DELETE CASCADE
 );
 
--- -goose Down
-DROP TABLE feeds;
+-- +goose Down
+DROP TABLE IF EXISTS feeds;
 
