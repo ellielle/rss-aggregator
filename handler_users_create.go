@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,6 +12,8 @@ import (
 )
 
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
+	// User only needs to supply a name, this is a simple project
+	// focused on SQL use in Go
 	defer r.Body.Close()
 	type parameters struct {
 		Name string `json:"name"`
@@ -21,6 +22,7 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		Name string `json:"name"`
 	}
 
+	// Get name from params, or throw an error if it doesn't exist
 	var params = parameters{}
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&params)
@@ -28,6 +30,8 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusBadRequest, "Bad JSON format")
 		return
 	}
+
+	// Give each user a uuid for ID
 	id := uuid.New()
 	created := time.Now()
 	updated := created
@@ -37,7 +41,6 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusMethodNotAllowed, err.Error())
 		return
 	}
-	log.Print(user)
 
 	respondWithJSON(w, http.StatusCreated, response{Name: user.Name})
 }
