@@ -38,7 +38,7 @@ func (cfg *apiConfig) handlerFollowsCreate(w http.ResponseWriter, r *http.Reques
 	created := time.Now()
 	updated := created
 
-	ff, err := cfg.DB.CreateFeedsFollow(context.Background(), database.CreateFeedsFollowParams{
+	ff, err := cfg.DB.CreateFeedsFollows(context.Background(), database.CreateFeedsFollowsParams{
 		ID:        id,
 		CreatedAt: created,
 		UpdatedAt: updated,

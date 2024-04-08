@@ -12,13 +12,13 @@ import (
 	"github.com/google/uuid"
 )
 
-const createFeedsFollow = `-- name: CreateFeedsFollow :one
+const createFeedsFollows = `-- name: CreateFeedsFollows :one
 INSERT INTO feeds_follows (id, created_at, updated_at, user_id, feed_id)
 VALUES ($1, $2, $3, $4, $5)
 RETURNING id, created_at, updated_at, user_id, feed_id
 `
 
-type CreateFeedsFollowParams struct {
+type CreateFeedsFollowsParams struct {
 	ID        uuid.UUID
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -26,8 +26,8 @@ type CreateFeedsFollowParams struct {
 	FeedID    uuid.UUID
 }
 
-func (q *Queries) CreateFeedsFollow(ctx context.Context, arg CreateFeedsFollowParams) (FeedsFollow, error) {
-	row := q.db.QueryRowContext(ctx, createFeedsFollow,
+func (q *Queries) CreateFeedsFollows(ctx context.Context, arg CreateFeedsFollowsParams) (FeedsFollow, error) {
+	row := q.db.QueryRowContext(ctx, createFeedsFollows,
 		arg.ID,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -45,21 +45,46 @@ func (q *Queries) CreateFeedsFollow(ctx context.Context, arg CreateFeedsFollowPa
 	return i, err
 }
 
-const deleteFeedsFollow = `-- name: DeleteFeedsFollow :one
+const deleteFeedsFollows = `-- name: DeleteFeedsFollows :exec
 DELETE FROM feeds_follows
 WHERE id = $1
-RETURNING id, created_at, updated_at, user_id, feed_id
 `
 
-func (q *Queries) DeleteFeedsFollow(ctx context.Context, id uuid.UUID) (FeedsFollow, error) {
-	row := q.db.QueryRowContext(ctx, deleteFeedsFollow, id)
-	var i FeedsFollow
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.UserID,
-		&i.FeedID,
-	)
-	return i, err
+func (q *Queries) DeleteFeedsFollows(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, deleteFeedsFollows, id)
+	return err
+}
+
+const listFeedsFollows = `-- name: ListFeedsFollows :many
+SELECT id, created_at, updated_at, user_id, feed_id FROM feeds_follows
+WHERE user_id = $1
+`
+
+func (q *Queries) ListFeedsFollows(ctx context.Context, userID uuid.UUID) ([]FeedsFollow, error) {
+	rows, err := q.db.QueryContext(ctx, listFeedsFollows, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []FeedsFollow
+	for rows.Next() {
+		var i FeedsFollow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserID,
+			&i.FeedID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

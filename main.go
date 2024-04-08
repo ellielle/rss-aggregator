@@ -52,6 +52,8 @@ func main() {
 	mux.HandleFunc("POST /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFollowsCreate))
 	// Authenticated endpoint to unsubscribe a User from a Feed
 	mux.HandleFunc("DELETE /v1/feed_follows/{feed_follow_id}", apiCfg.middlewareAuth(apiCfg.handlerFollowsDelete))
+	// Authenticated endpoint for a User to view all Feeds they Follow
+	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFollowsAll))
 
 	corsMux := middlewareCors(mux)
 	server := &http.Server{
