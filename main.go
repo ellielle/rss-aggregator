@@ -39,7 +39,8 @@ func main() {
 	// Endpoints that respond with 200OK and an error, respectively
 	mux.HandleFunc("GET /v1/readiness", handlerReadiness)
 	mux.HandleFunc("GET /v1/err", handlerError)
-	// TODO:
+	// Endpoint for users to get their own information, requires
+	// their api_key
 	mux.HandleFunc("GET /v1/users", apiCfg.handlerUsers)
 	// Creates a user
 	mux.HandleFunc("POST /v1/users", apiCfg.handlerUsersCreate)
