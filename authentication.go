@@ -26,7 +26,7 @@ func (cfg *apiConfig) middlewareAuth(handler authedHandler) http.HandlerFunc {
 			respondWithError(w, http.StatusNotFound, "Invalid API Key")
 			return
 		}
-		// TODO: testing
+
 		handler(w, r, user)
 	})
 }

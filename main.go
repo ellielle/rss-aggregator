@@ -46,6 +46,8 @@ func main() {
 	mux.HandleFunc("POST /v1/users", apiCfg.handlerUsersCreate)
 	// Creates a feed for an authenticated user
 	mux.HandleFunc("POST /v1/feeds", apiCfg.middlewareAuth(apiCfg.handlerFeedsCreate))
+	// Non-authenticated endpoint to retrieve all feeds
+	mux.HandleFunc("GET /v1/feeds", apiCfg.handlerFeeds)
 
 	corsMux := middlewareCors(mux)
 	server := &http.Server{
