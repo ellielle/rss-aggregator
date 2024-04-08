@@ -19,7 +19,8 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		Name string `json:"name"`
 	}
 	type response struct {
-		Name string `json:"name"`
+		Name   string `json:"name"`
+		ApiKey string `json:"api_key"`
 	}
 
 	// Get name from params, or throw an error if it doesn't exist
@@ -42,5 +43,5 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, response{Name: user.Name})
+	respondWithJSON(w, http.StatusCreated, response{Name: user.Name, ApiKey: user.ApiKey})
 }
