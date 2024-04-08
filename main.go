@@ -34,12 +34,17 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	handlerFileserver := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
-	mux.Handle("GET /app/*", handlerFileserver)
+	//	handlerFileserver := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
+	//	mux.Handle("GET /app/*", handlerFileserver)
+	// Endpoints that respond with 200OK and an error, respectively
 	mux.HandleFunc("GET /v1/readiness", handlerReadiness)
 	mux.HandleFunc("GET /v1/err", handlerError)
+	// TODO:
 	mux.HandleFunc("GET /v1/users", apiCfg.handlerUsers)
+	// Creates a user
 	mux.HandleFunc("POST /v1/users", apiCfg.handlerUsersCreate)
+	// Creates a feed for an authenticated user
+	mux.HandleFunc("POST /v1/feeds", apiCfg.middlewareAuth(apiCfg.handlerFeedsCreate))
 
 	corsMux := middlewareCors(mux)
 	server := &http.Server{
