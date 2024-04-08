@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -14,6 +13,7 @@ import (
 )
 
 func (cfg *apiConfig) handlerFollowsCreate(w http.ResponseWriter, r *http.Request, user database.User) {
+	defer r.Body.Close()
 	type parameters struct {
 		FeedId uuid.UUID `json:"feed_id"`
 	}
@@ -55,6 +55,7 @@ func (cfg *apiConfig) handlerFollowsCreate(w http.ResponseWriter, r *http.Reques
 }
 
 func (cfg *apiConfig) handlerFollowsDelete(w http.ResponseWriter, r *http.Request, user database.User) {
+	defer r.Body.Close()
 	type response struct {
 		UserId   uuid.UUID `json:"user_id"`
 		FollowId uuid.UUID `json:"deleted_feed"`
@@ -88,4 +89,10 @@ func (cfg *apiConfig) handlerFollowsDelete(w http.ResponseWriter, r *http.Reques
 	}
 
 	respondWithJSON(w, http.StatusNotImplemented, response{UserId: user.ID, FollowId: deleted_id.ID})
+}
+
+func (cfg *apiConfig) handlerFollowsAll(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	respondWithError(w, http.StatusNotImplemented, "nope")
 }

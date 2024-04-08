@@ -11,9 +11,9 @@ import (
 	"github.com/ellielle/rss-aggregator/internal/database"
 )
 
+// User only needs to supply a name, this is a simple project
+// focused on SQL use in Go
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
-	// User only needs to supply a name, this is a simple project
-	// focused on SQL use in Go
 	defer r.Body.Close()
 	type parameters struct {
 		Name string `json:"name"`

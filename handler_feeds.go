@@ -8,6 +8,7 @@ import (
 )
 
 func (cfg *apiConfig) handlerFeeds(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	type response struct {
 		Feeds []database.Feed `json:"feeds"`
 	}

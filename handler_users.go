@@ -11,6 +11,7 @@ import (
 
 // Handler to find a user via API key
 func (cfg *apiConfig) handlerUsers(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	type response struct {
 		Id        uuid.UUID `json:"id"`
 		Name      string    `json:"name"`
