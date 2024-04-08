@@ -13,7 +13,7 @@ func (cfg *apiConfig) handlerFeeds(w http.ResponseWriter, r *http.Request) {
 		Feeds []database.Feed `json:"feeds"`
 	}
 
-	feeds, err := cfg.DB.GetAllFeeds(context.Background())
+	feeds, err := cfg.DB.ListFeeds(context.Background())
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "No feeds found")
 		return
