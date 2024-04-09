@@ -39,7 +39,7 @@ func (cfg *apiConfig) handlerFeedsCreate(w http.ResponseWriter, r *http.Request,
 	// Create a feed owned by the User
 	feed, err := cfg.DB.CreateFeed(context.Background(), database.CreateFeedParams{ID: id, CreatedAt: created, UpdatedAt: updated, Url: params.Url, Name: params.Name, UserID: user.ID})
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "Feed not found")
+		respondWithError(w, http.StatusNotFound, "Feed already exists")
 		return
 	}
 
