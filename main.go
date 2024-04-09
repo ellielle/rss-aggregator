@@ -39,9 +39,8 @@ func main() {
 	// Endpoints that respond with 200OK and an error, respectively
 	mux.HandleFunc("GET /v1/readiness", handlerReadiness)
 	mux.HandleFunc("GET /v1/err", handlerError)
-	// Endpoint for users to get their own information, requires
-	// their api_key
-	mux.HandleFunc("GET /v1/users", apiCfg.handlerUsers)
+	// Authenticated endpoint for users to get their own information
+	mux.HandleFunc("GET /v1/users", apiCfg.middlewareAuth(apiCfg.handlerUsers))
 	// Creates a user
 	mux.HandleFunc("POST /v1/users", apiCfg.handlerUsersCreate)
 	// Creates a feed for an authenticated user
