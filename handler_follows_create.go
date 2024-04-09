@@ -46,7 +46,7 @@ func (cfg *apiConfig) handlerFollowsCreate(w http.ResponseWriter, r *http.Reques
 		UserID:    user.ID,
 	})
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Error saving feed")
+		respondWithError(w, http.StatusBadRequest, "User is already subscribed to this feed")
 		return
 	}
 

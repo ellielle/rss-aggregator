@@ -5,7 +5,8 @@ RETURNING *;
 
 -- name: DeleteFeedsFollows :exec
 DELETE FROM feeds_follows
-WHERE id = $1;
+WHERE id = $1
+AND user_id = $2;
 
 -- name: ListFeedsFollows :many
 SELECT * FROM feeds_follows

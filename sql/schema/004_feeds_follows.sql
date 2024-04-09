@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS feeds_follows (
 				updated_at TIMESTAMP NOT NULL,
 				user_id UUID NOT NULL,
 				feed_id UUID NOT NULL,
+				UNIQUE(user_id, feed_id),
 				CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE, 
 				CONSTRAINT fk_feeds FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
 );
