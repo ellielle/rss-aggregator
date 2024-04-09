@@ -31,7 +31,7 @@ func main() {
 	// Create a new request mux
 	mux := http.NewServeMux()
 
-	apiCfg.createRouter(mux, db)
+	apiCfg.createRouter(mux)
 
 	// Add CORS headers
 	corsMux := middlewareCors(mux)

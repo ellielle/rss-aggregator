@@ -11,6 +11,8 @@ import (
 	"github.com/ellielle/rss-aggregator/internal/database"
 )
 
+// Handler to create a new feed using the given Name and Url
+// Requires API key
 func (cfg *apiConfig) handlerFeedsCreate(w http.ResponseWriter, r *http.Request, user database.User) {
 	defer r.Body.Close()
 	type parameters struct {

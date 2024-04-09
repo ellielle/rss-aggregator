@@ -9,6 +9,8 @@ import (
 	"github.com/ellielle/rss-aggregator/internal/database"
 )
 
+// Handler to delete a User's Followed Feed by feeds_follows ID
+// Requires API key
 func (cfg *apiConfig) handlerFollowsDelete(w http.ResponseWriter, r *http.Request, user database.User) {
 	defer r.Body.Close()
 	type response struct {
@@ -22,6 +24,7 @@ func (cfg *apiConfig) handlerFollowsDelete(w http.ResponseWriter, r *http.Reques
 	}
 	follow_id, err := uuid.Parse(follow_id_str)
 
+	// Delete the follow relationship from the user
 	err = cfg.DB.DeleteFeedsFollows(context.Background(), database.DeleteFeedsFollowsParams{ID: follow_id, UserID: user.ID})
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Feed does not exist")

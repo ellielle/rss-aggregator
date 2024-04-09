@@ -11,6 +11,8 @@ import (
 	"github.com/ellielle/rss-aggregator/internal/database"
 )
 
+// Handler to create a Follow relationship between a User and a Feed
+// Requires API key
 func (cfg *apiConfig) handlerFollowsCreate(w http.ResponseWriter, r *http.Request, user database.User) {
 	defer r.Body.Close()
 	type parameters struct {
@@ -38,6 +40,7 @@ func (cfg *apiConfig) handlerFollowsCreate(w http.ResponseWriter, r *http.Reques
 	created := time.Now()
 	updated := created
 
+	// Create the Feed Follow, or return an error
 	ff, err := cfg.DB.CreateFeedsFollows(context.Background(), database.CreateFeedsFollowsParams{
 		ID:        id,
 		CreatedAt: created,

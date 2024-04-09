@@ -9,6 +9,8 @@ import (
 	dotenv "github.com/joho/godotenv"
 )
 
+// Load the database connection URL from the environment
+// Then create a database connection and return it
 func getDatabase() *sql.DB {
 	err := dotenv.Load()
 	if err != nil {
@@ -23,7 +25,8 @@ func getDatabase() *sql.DB {
 	return db
 }
 
-func (apiCfg *apiConfig) createRouter(mux *http.ServeMux, db *sql.DB) {
+// Create all the routes for the http mux
+func (apiCfg *apiConfig) createRouter(mux *http.ServeMux) {
 	// const filepathRoot = "."
 	//	handlerFileserver := http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))
 	//	mux.Handle("GET /app/*", handlerFileserver)
