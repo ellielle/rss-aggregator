@@ -18,12 +18,8 @@ func (cfg *apiConfig) handlerFeedsCreate(w http.ResponseWriter, r *http.Request,
 		Url  string `json:"url"`
 	}
 	type response struct {
-		Id        uuid.UUID `json:"id"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
-		Name      string    `json:"name"`
-		Url       string    `json:"url"`
-		UserId    uuid.UUID `json:"user_id"`
+		Id       uuid.UUID `json:"feed"`
+		FollowId uuid.UUID `json:"feed_follow"`
 	}
 
 	// Get name from params, or throw an error if it doesn't exist
@@ -43,9 +39,19 @@ func (cfg *apiConfig) handlerFeedsCreate(w http.ResponseWriter, r *http.Request,
 	// Create a feed owned by the User
 	feed, err := cfg.DB.CreateFeed(context.Background(), database.CreateFeedParams{ID: id, CreatedAt: created, UpdatedAt: updated, Url: params.Url, Name: params.Name, UserID: user.ID})
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error())
+		respondWithError(w, http.StatusNotFound, "Feed not found")
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, response{Id: feed.ID, CreatedAt: feed.CreatedAt, UpdatedAt: feed.UpdatedAt, Name: feed.Name, Url: feed.Url, UserId: feed.UserID})
+	id = uuid.New()
+	created = time.Now()
+	updated = created
+
+	follow, err := cfg.DB.CreateFeedsFollows(context.Background(), database.CreateFeedsFollowsParams{ID: id, UserID: user.ID, FeedID: feed.ID})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "User or Feed does not exist")
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, response{Id: feed.ID, FollowId: follow.ID})
 }
