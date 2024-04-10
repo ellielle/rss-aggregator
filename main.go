@@ -1,21 +1,19 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	dotenv "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	"github.com/ellielle/rss-aggregator/internal/database"
-	"github.com/ellielle/rss-aggregator/internal/httpclient"
 )
 
 type apiConfig struct {
-	DB     *database.Queries
-	Client *httpclient.Client
+	DB *database.Queries
 }
 
 func main() {
@@ -32,12 +30,21 @@ func main() {
 	// Shove database queries into a config struct
 	dbQueries := database.New(db)
 
-	// Create a new http Client with cache
-	// The cache reap time is low so it can be tested
-	client := httpclient.NewClient(5*time.Second, 20*time.Second)
-
 	// Fill config struct
-	apiCfg := apiConfig{DB: dbQueries, Client: &client}
+	apiCfg := apiConfig{DB: dbQueries}
+
+	// TODO: remove debug flag
+	dbg := flag.Bool("debug", false, "Debug Update Feed Data")
+	flag.Parse()
+	if *dbg {
+		err = updateFeedData(&apiCfg)
+		if err != nil {
+			log.Print("IT DONE BROKE")
+			log.Fatal(err.Error())
+		}
+
+		os.Exit(0)
+	}
 
 	// Create a new request mux
 	mux := http.NewServeMux()
