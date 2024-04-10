@@ -4,15 +4,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	dotenv "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	"github.com/ellielle/rss-aggregator/internal/database"
+	"github.com/ellielle/rss-aggregator/internal/httpclient"
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB     *database.Queries
+	Client *httpclient.Client
 }
 
 func main() {
@@ -22,11 +25,19 @@ func main() {
 		log.Fatal("error loading .env file")
 	}
 	port := os.Getenv("PORT")
+
 	// Get database connection
 	db := getDatabase()
+
 	// Shove database queries into a config struct
 	dbQueries := database.New(db)
-	apiCfg := apiConfig{DB: dbQueries}
+
+	// Create a new http Client with cache
+	// The cache reap time is low so it can be tested
+	client := httpclient.NewClient(5*time.Second, 20*time.Second)
+
+	// Fill config struct
+	apiCfg := apiConfig{DB: dbQueries, Client: &client}
 
 	// Create a new request mux
 	mux := http.NewServeMux()
