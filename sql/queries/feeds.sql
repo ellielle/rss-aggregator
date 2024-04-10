@@ -7,7 +7,7 @@ RETURNING *;
 SELECT * FROM feeds;
 
 -- name: GetNextFeedsToFetch :many
-SELECT * FROM feeds
+SELECT url FROM feeds
 ORDER BY last_fetched_at DESC
 LIMIT $1;
 
