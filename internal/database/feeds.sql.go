@@ -51,24 +51,29 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 }
 
 const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
-SELECT url FROM feeds
+SELECT id, url FROM feeds
 ORDER BY last_fetched_at DESC
 LIMIT $1
 `
 
-func (q *Queries) GetNextFeedsToFetch(ctx context.Context, limit int32) ([]string, error) {
+type GetNextFeedsToFetchRow struct {
+	ID  uuid.UUID
+	Url string
+}
+
+func (q *Queries) GetNextFeedsToFetch(ctx context.Context, limit int32) ([]GetNextFeedsToFetchRow, error) {
 	rows, err := q.db.QueryContext(ctx, getNextFeedsToFetch, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []GetNextFeedsToFetchRow
 	for rows.Next() {
-		var url string
-		if err := rows.Scan(&url); err != nil {
+		var i GetNextFeedsToFetchRow
+		if err := rows.Scan(&i.ID, &i.Url); err != nil {
 			return nil, err
 		}
-		items = append(items, url)
+		items = append(items, i)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

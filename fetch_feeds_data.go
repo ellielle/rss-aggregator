@@ -2,10 +2,18 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
 	"errors"
 	"io"
+	"log"
 	"net/http"
+	"sync"
+	"time"
+
+	"github.com/google/uuid"
+
+	"github.com/ellielle/rss-aggregator/internal/database"
 )
 
 type RSSFeed struct {
@@ -43,33 +51,49 @@ func updateFeedData(cfg *apiConfig) error {
 		return errors.New("Error retrieving feed data")
 	}
 
+	// Use a WaitGroup to update all feeds at the same time
+	wg := sync.WaitGroup{}
 	for _, feed := range feedList {
-		err := cfg.fetchFeedData(feed.Url)
-		if err != nil {
-			// TODO: better error message
-			return errors.New("Error parsing feed data")
-		}
+		// Add 1 to the tracked goroutines
+		wg.Add(1)
+
+		go func(URL string) error {
+			// Decrement tracked goroutines when finished
+			defer wg.Done()
+
+			// Attempt to update RSS Feed
+			err = cfg.fetchFeedData(URL)
+			if err != nil {
+				return errors.New("Bad XML feed")
+			}
+
+			// Update last_fetched_at and updated_at fields of the Feed
+			cfg.updateFeedMetadata(feed.Id)
+			return err
+		}(feed.Url)
 	}
+	// Wait for all feed fetches to complete
+	wg.Wait()
 
 	return nil
 }
 
 // Get a list of the next <LIMIT> feeds that need to be updated
-func (cfg *apiConfig) getFeedsToUpdate() ([]Feed, error) {
+func (cfg *apiConfig) getFeedsToUpdate() ([]GetNextFeedsToFetchRow, error) {
 	const LIMIT = 10
-	feeds := []Feed{}
-	db_feed, err := cfg.DB.GetNextFeedsToFetch(context.Background(), LIMIT)
+	feeds, err := cfg.DB.GetNextFeedsToFetch(context.Background(), LIMIT)
 	if err != nil {
-		return []Feed{}, errors.New(err.Error())
+		return []GetNextFeedsToFetchRow{}, errors.New(err.Error())
 	}
 
-	// Convert the feeds from the database API to a JSON-safe API
-	for _, f := range db_feed {
-		feed := DatabaseFeedToFeed(f)
-		feeds = append(feeds, feed)
+	// Map the database API struct to a JSON-friendly struct
+	mfeeds := []GetNextFeedsToFetchRow{}
+	for _, feed := range feeds {
+		f := DatabaseNextFeedsToNextFeeds(feed)
+		mfeeds = append(mfeeds, f)
 	}
 
-	return feeds, nil
+	return mfeeds, nil
 }
 
 // Update feed data for a single feed URL
@@ -100,7 +124,18 @@ func (cfg *apiConfig) fetchFeedData(URL string) error {
 		return errors.New("Invalid RSS feed")
 	}
 
-	// TODO: update RSS URL's updated_at, and last_fetched_at fields
+	// TODO: this can be removed when done, it's just a log
+	for _, data := range feedData.Channel.Item {
+		log.Print(data.Title)
+	}
 
 	return nil
+}
+
+func (cfg *apiConfig) updateFeedMetadata(feedID uuid.UUID) {
+	fetched := sql.NullTime{
+		Time:  time.Now(),
+		Valid: true,
+	}
+	cfg.DB.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{ID: feedID, LastFetchedAt: fetched})
 }
