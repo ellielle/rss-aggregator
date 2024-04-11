@@ -13,7 +13,7 @@ func (cfg *apiConfig) handlerFeeds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get list of feeds from the database
-	db_feeds, err := cfg.DB.ListFeeds(context.Background())
+	dbFeeds, err := cfg.DB.ListFeeds(context.Background())
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "No feeds found")
 		return
@@ -21,7 +21,7 @@ func (cfg *apiConfig) handlerFeeds(w http.ResponseWriter, r *http.Request) {
 
 	// Map the database API to a JSON-friendly struct
 	feeds := []Feed{}
-	for _, feed := range db_feeds {
+	for _, feed := range dbFeeds {
 		feeds = append(feeds, DatabaseFeedToFeed(feed))
 	}
 

@@ -51,7 +51,7 @@ func DatabaseFeedToFeed(feed database.Feed) Feed {
 }
 
 // table: feeds_follows
-type Feeds_Follow struct {
+type FeedsFollow struct {
 	Id        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -59,12 +59,47 @@ type Feeds_Follow struct {
 	FeedId    uuid.UUID `json:"feed_id"`
 }
 
-func DatabaseFeedFollowsToFeedFollows(ff database.FeedsFollow) Feeds_Follow {
-	return Feeds_Follow{
+func DatabaseFeedFollowsToFeedFollows(ff database.FeedsFollow) FeedsFollow {
+	return FeedsFollow{
 		Id:        ff.ID,
 		CreatedAt: ff.CreatedAt,
 		UpdatedAt: ff.UpdatedAt,
 		UserId:    ff.UserID,
 		FeedId:    ff.FeedID,
+	}
+}
+
+type GetNextFeedsToFetchRow struct {
+	Id  uuid.UUID `json:"id"`
+	Url string    `json:"url"`
+}
+
+func DatabaseNextFeedsToNextFeeds(nf database.GetNextFeedsToFetchRow) GetNextFeedsToFetchRow {
+	return GetNextFeedsToFetchRow{
+		Id:  nf.ID,
+		Url: nf.Url,
+	}
+}
+
+// table: posts
+type Post struct {
+	Id          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Title       string    `json:"title"`
+	Url         string    `json:"url"`
+	Description *string   `json:"description"`
+	FeedId      uuid.UUID `json:"feed_id"`
+}
+
+func DatabasePostsToPosts(post database.Post) Post {
+	return Post{
+		Id:          post.ID,
+		CreatedAt:   post.CreatedAt,
+		UpdatedAt:   post.UpdatedAt,
+		Title:       post.Title,
+		Url:         post.Url,
+		Description: &post.Description.String,
+		FeedId:      post.FeedID,
 	}
 }

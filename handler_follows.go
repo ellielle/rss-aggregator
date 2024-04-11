@@ -12,7 +12,7 @@ import (
 func (cfg *apiConfig) handlerFollowsAll(w http.ResponseWriter, r *http.Request, user database.User) {
 	defer r.Body.Close()
 	type response struct {
-		Follows []Feeds_Follow `json:"feeds"`
+		Follows []FeedsFollow `json:"feeds"`
 	}
 
 	// Get the User's list of Followed Feeds
@@ -23,10 +23,10 @@ func (cfg *apiConfig) handlerFollowsAll(w http.ResponseWriter, r *http.Request, 
 	}
 
 	// Map database struct to a JSON friend struct
-	feeds_follow := []Feeds_Follow{}
+	feedsFollow := []FeedsFollow{}
 	for _, follow := range followed {
-		feeds_follow = append(feeds_follow, DatabaseFeedFollowsToFeedFollows(follow))
+		feedsFollow = append(feedsFollow, DatabaseFeedFollowsToFeedFollows(follow))
 	}
 
-	respondWithJSON(w, http.StatusOK, response{Follows: feeds_follow})
+	respondWithJSON(w, http.StatusOK, response{Follows: feedsFollow})
 }
