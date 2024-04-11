@@ -48,4 +48,7 @@ func (apiCfg *apiConfig) createRouter(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /v1/feed_follows/{feed_follow_id}", apiCfg.middlewareAuth(apiCfg.handlerFollowsDelete))
 	// Authenticated endpoint for a User to view all Feeds they Follow
 	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFollowsAll))
+	// Authenticated endpoint for a User to view Posts from their feeds, with an optional
+	// limit query
+	mux.HandleFunc("GET /v1/posts/{limit}", apiCfg.middlewareAuth(apiCfg.handlerPosts))
 }
