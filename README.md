@@ -22,7 +22,17 @@ git clone git@github.com:ellielle/rss-aggregator.git
 
 This repo makes use of [godotenv](https://github.com/joho/godotenv) to provide the env variables `PORT` and `DB_CONNECTION`, which is making use of a postgresql database.
 
-To build and run the server, use the following command:
+[Goose](https://github.com/pressly/goose) is used to handle migrations, and [sqlc](https://docs.sqlc.dev/en/latest/index.html) is used to generate Go code.
+
+Navigate to the `sql/schema` directory and run:
+
+```bash
+goose postgres postgres://username:password@localhost:5432/dbname up
+```
+
+After migrating, run `sqlc generate` to generate Go code to interact with the database.
+
+Then build and run the server using the following command:
 
 ```bash
 go build -o out && ./out
