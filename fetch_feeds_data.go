@@ -45,37 +45,39 @@ type RSSFeed struct {
 }
 
 // Update an RSS feed's data
-func updateFeedData(cfg *apiConfig) error {
+func updateFeedData(cfg *apiConfig, tickerInterval time.Duration) {
 	feedList, err := cfg.getFeedsToUpdate()
 	if err != nil {
-		return errors.New("Error retrieving feed data")
+		return
 	}
 
-	// Use a WaitGroup to update all feeds at the same time
-	wg := sync.WaitGroup{}
-	for _, feed := range feedList {
-		// Add 1 to the tracked goroutines
-		wg.Add(1)
+	ticker := time.NewTicker(tickerInterval)
+	for ; ; <-ticker.C {
 
-		go func(URL string) error {
-			// Decrement tracked goroutines when finished
-			defer wg.Done()
+		// Use a WaitGroup to update all feeds at the same time
+		wg := sync.WaitGroup{}
+		for _, feed := range feedList {
+			// Add 1 to the tracked goroutines
+			wg.Add(1)
 
-			// Attempt to update RSS Feed
-			err = cfg.fetchFeedData(URL)
-			if err != nil {
-				return errors.New("Bad XML feed")
-			}
+			go func(URL string) error {
+				// Decrement tracked goroutines when finished
+				defer wg.Done()
 
-			// Update last_fetched_at and updated_at fields of the Feed
-			cfg.updateFeedMetadata(feed.Id)
-			return err
-		}(feed.Url)
+				// Attempt to update RSS Feed
+				err = cfg.fetchFeedData(URL)
+				if err != nil {
+					return errors.New("Bad XML feed")
+				}
+
+				// Update last_fetched_at and updated_at fields of the Feed
+				cfg.updateFeedMetadata(feed.Id)
+				return err
+			}(feed.Url)
+		}
+		// Wait for all feed fetches to complete
+		wg.Wait()
 	}
-	// Wait for all feed fetches to complete
-	wg.Wait()
-
-	return nil
 }
 
 // Get a list of the next <LIMIT> feeds that need to be updated
@@ -95,6 +97,10 @@ func (cfg *apiConfig) getFeedsToUpdate() ([]GetNextFeedsToFetchRow, error) {
 
 	return mfeeds, nil
 }
+
+// Run in a goroutine so it can be concurrently processed
+// while handling http requests
+//
 
 // Update feed data for a single feed URL
 func (cfg *apiConfig) fetchFeedData(URL string) error {
@@ -125,9 +131,7 @@ func (cfg *apiConfig) fetchFeedData(URL string) error {
 	}
 
 	// TODO: this can be removed when done, it's just a log
-	for _, data := range feedData.Channel.Item {
-		log.Print(data.Title)
-	}
+	log.Printf("feedData: %v", feedData.Channel.Item[0].Title)
 
 	return nil
 }

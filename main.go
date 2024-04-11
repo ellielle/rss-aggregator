@@ -1,10 +1,10 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	dotenv "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -17,6 +17,10 @@ type apiConfig struct {
 }
 
 func main() {
+	// interval to retrieve RSS Feed data
+	// interval is multiplied by time.Second
+	const FEED_INTERVAL = 60
+
 	// Retrive port from environment
 	err := dotenv.Load()
 	if err != nil {
@@ -33,19 +37,6 @@ func main() {
 	// Fill config struct
 	apiCfg := apiConfig{DB: dbQueries}
 
-	// TODO: remove debug flag
-	dbg := flag.Bool("debug", false, "Debug Update Feed Data")
-	flag.Parse()
-	if *dbg {
-		err = updateFeedData(&apiCfg)
-		if err != nil {
-			log.Print("IT DONE BROKE")
-			log.Fatal(err.Error())
-		}
-
-		os.Exit(0)
-	}
-
 	// Create a new request mux
 	mux := http.NewServeMux()
 
@@ -53,6 +44,10 @@ func main() {
 
 	// Add CORS headers
 	corsMux := middlewareCors(mux)
+
+	// Start Feed refreshing worker
+	// interval
+	go updateFeedData(&apiCfg, FEED_INTERVAL*time.Second)
 
 	// Configure server and start
 	server := &http.Server{
