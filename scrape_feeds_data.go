@@ -89,7 +89,7 @@ func getFeedsToUpdate(cfg *apiConfig) ([]GetNextFeedsToFetchRow, error) {
 	const LIMIT = 10
 	feeds, err := cfg.DB.GetNextFeedsToFetch(context.Background(), LIMIT)
 	if err != nil {
-		return []GetNextFeedsToFetchRow{}, errors.New(err.Error())
+		return []GetNextFeedsToFetchRow{}, errors.New("No feeds to retrieve")
 	}
 
 	// Map the database API struct to a JSON-friendly struct

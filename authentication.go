@@ -23,7 +23,7 @@ func (cfg *apiConfig) middlewareAuth(handler authedHandler) http.HandlerFunc {
 		// Look user up by API key
 		user, err := cfg.DB.GetUserByApiKey(context.Background(), apiKey)
 		if err != nil {
-			respondWithError(w, http.StatusNotFound, "Invalid API Key")
+			respondWithError(w, http.StatusUnauthorized, "Invalid API Key")
 			return
 		}
 

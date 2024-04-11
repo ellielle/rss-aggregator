@@ -40,6 +40,7 @@ func main() {
 	// Create a new request mux
 	mux := http.NewServeMux()
 
+	// Attach endpoints to request mux
 	apiCfg.createRouter(mux)
 
 	// Add CORS headers
