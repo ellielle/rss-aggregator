@@ -50,5 +50,6 @@ func (apiCfg *apiConfig) createRouter(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerFollowsAll))
 	// Authenticated endpoint for a User to view Posts from their feeds, with an optional
 	// limit query
+	mux.HandleFunc("GET /v1/posts", apiCfg.middlewareAuth(apiCfg.handlerPosts))
 	mux.HandleFunc("GET /v1/posts/{limit}", apiCfg.middlewareAuth(apiCfg.handlerPosts))
 }
