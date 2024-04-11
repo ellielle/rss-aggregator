@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,7 +47,7 @@ type RSSFeed struct {
 
 // Update an RSS feed's data
 func updateFeedData(cfg *apiConfig, tickerInterval time.Duration) {
-	feedList, err := cfg.getFeedsToUpdate()
+	feedList, err := getFeedsToUpdate(cfg)
 	if err != nil {
 		return
 	}
@@ -65,13 +66,16 @@ func updateFeedData(cfg *apiConfig, tickerInterval time.Duration) {
 				defer wg.Done()
 
 				// Attempt to update RSS Feed
-				err = cfg.fetchFeedData(URL)
+				feedData, err := fetchFeedData(URL)
 				if err != nil {
 					return errors.New("Bad XML feed")
 				}
 
+				// Update database with Posts data
+				updateFeedsDatabase(cfg, feedData, feed.Id)
+
 				// Update last_fetched_at and updated_at fields of the Feed
-				cfg.updateFeedMetadata(feed.Id)
+				updateFeedMetadata(cfg, feed.Id)
 				return err
 			}(feed.Url)
 		}
@@ -81,7 +85,7 @@ func updateFeedData(cfg *apiConfig, tickerInterval time.Duration) {
 }
 
 // Get a list of the next <LIMIT> feeds that need to be updated
-func (cfg *apiConfig) getFeedsToUpdate() ([]GetNextFeedsToFetchRow, error) {
+func getFeedsToUpdate(cfg *apiConfig) ([]GetNextFeedsToFetchRow, error) {
 	const LIMIT = 10
 	feeds, err := cfg.DB.GetNextFeedsToFetch(context.Background(), LIMIT)
 	if err != nil {
@@ -98,48 +102,89 @@ func (cfg *apiConfig) getFeedsToUpdate() ([]GetNextFeedsToFetchRow, error) {
 	return mfeeds, nil
 }
 
-// Run in a goroutine so it can be concurrently processed
-// while handling http requests
-//
-
 // Update feed data for a single feed URL
-func (cfg *apiConfig) fetchFeedData(URL string) error {
+func fetchFeedData(URL string) (*RSSFeed, error) {
 	// Create a request to the RSS feed's URL
 	req, err := http.NewRequest("GET", URL, nil)
 	if err != nil {
-		return errors.New("Invalid feed URL")
+		return &RSSFeed{}, errors.New("Invalid feed URL")
 	}
 
 	// Carry out the http request
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.New("Invalid feed URL")
+		return &RSSFeed{}, errors.New("Invalid feed URL")
 	}
 	defer resp.Body.Close()
 
 	// Get body as []byte
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return errors.New("Invalid RSS feed")
+		return &RSSFeed{}, errors.New("Invalid RSS feed")
 	}
 
 	// Shove that data into that struct
 	feedData := RSSFeed{}
 	err = xml.Unmarshal(body, &feedData)
 	if err != nil {
-		return errors.New("Invalid RSS feed")
+		return &RSSFeed{}, errors.New("Invalid RSS feed")
 	}
 
-	// TODO: this can be removed when done, it's just a log
-	log.Printf("feedData: %v", feedData.Channel.Item[0].Title)
-
-	return nil
+	return &feedData, nil
 }
 
-func (cfg *apiConfig) updateFeedMetadata(feedID uuid.UUID) {
+func updateFeedMetadata(cfg *apiConfig, feedID uuid.UUID) {
 	fetched := sql.NullTime{
 		Time:  time.Now(),
 		Valid: true,
 	}
 	cfg.DB.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{ID: feedID, LastFetchedAt: fetched})
+}
+
+// Update database with current Feed data
+func updateFeedsDatabase(cfg *apiConfig, data *RSSFeed, feedId uuid.UUID) error {
+	// iterate over each post in the feed and save it
+
+	for _, post := range data.Channel.Item {
+		// generate a UUID for each post
+		id := uuid.New()
+
+		// Parse RFC1123Z time layout string into time.Time
+		postCreatedTime, err := time.Parse(time.RFC1123Z, post.PubDate)
+		if err != nil {
+			log.Printf("Error parsing time %v for post with id %v", post.PubDate, feedId)
+		}
+
+		// Deal with sql nullstring
+		description := stringToSqlNullString(post.Description)
+
+		_, err = cfg.DB.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          id,
+			CreatedAt:   postCreatedTime,
+			UpdatedAt:   postCreatedTime,
+			Title:       post.Title,
+			Url:         post.Link,
+			Description: description,
+			FeedID:      feedId,
+		})
+		// Ignore SQL error of duplicate URL, Post is already in database
+		if err != nil && !strings.Contains(err.Error(), "posts_url_key") {
+			return errors.New(err.Error())
+		}
+	}
+
+	return nil
+}
+
+func stringToSqlNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{
+			String: "",
+			Valid:  false,
+		}
+	}
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
 }

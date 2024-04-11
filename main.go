@@ -46,7 +46,8 @@ func main() {
 	corsMux := middlewareCors(mux)
 
 	// Start Feed refreshing worker
-	// interval
+	// Run in a goroutine so it can be concurrently processed
+	// while handling http requests
 	go updateFeedData(&apiCfg, FEED_INTERVAL*time.Second)
 
 	// Configure server and start
